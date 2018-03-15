@@ -25,10 +25,10 @@ namespace Hibernate_PersistenceApi.Facts
 
             using (ISession session = OpenSession())
             {
-                session.Save(user);
+                var userId = (long) session.Save(user);
+                Assert.NotEqual(0, userId);
+                Assert.NotEqual(0, user.Id);
             }
-
-            Assert.NotEqual(0, user.Id);
 
             using (ISession session = OpenSession())
             {
@@ -37,11 +37,11 @@ namespace Hibernate_PersistenceApi.Facts
                 session.Save(user);
             }
 
-            /*using (ISession session = OpenSession())
+            using (ISession session = OpenSession())
             {
                 user.Name = "Guang";
                 session.Save(user);
-            }*/
+            }
         }
     }
 }

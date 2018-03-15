@@ -23,7 +23,9 @@ namespace Hibernate_PersistenceApi.Facts
 
         protected ISession OpenSession()
         {
-            return sessionFactory.OpenSession();
+            ISession session = sessionFactory.OpenSession();
+            session.FlushMode = FlushMode.Manual;
+            return session;
         }
     }
 }
