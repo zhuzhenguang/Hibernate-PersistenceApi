@@ -43,5 +43,30 @@ namespace Hibernate_PersistenceApi.Facts
                 session.Save(user);
             }
         }
+
+        [Fact]
+        public void should_persistent_user()
+        {
+            var user = new User {Name = "Zhu"};
+
+            using (ISession session = OpenSession())
+            {
+                session.Persist(user);
+                Assert.NotEqual(0, user.Id);
+            }
+
+            using (ISession session = OpenSession())
+            {
+                user = session.Load<User>(user.Id);
+                user.Name = "Zhen";
+                session.Persist(user);
+            }
+
+            using (ISession session = OpenSession())
+            {
+                user.Name = "Guang";
+                session.Persist(user);
+            }
+        }
     }
 }
