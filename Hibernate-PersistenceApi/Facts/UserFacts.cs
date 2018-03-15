@@ -44,6 +44,11 @@ namespace Hibernate_PersistenceApi.Facts
             }
         }
 
+        /*
+         * 1. persistent transient user
+         * 2. persistent persistent user
+         * 3. persistent detached user
+         */
         [Fact]
         public void should_persistent_user()
         {
@@ -66,6 +71,31 @@ namespace Hibernate_PersistenceApi.Facts
             {
                 user.Name = "Guang";
                 session.Persist(user);
+            }
+        }
+
+        [Fact]
+        public void should_update_user()
+        {
+            var user = new User {Name = "Zhu"};
+
+            using (ISession session = OpenSession())
+            {
+                session.Save(user);
+
+                user.Name = "Zhen";
+                session.Flush();
+                Assert.Equal("Zhen", user.Name);
+            }
+
+            var detachedUser = new User { Id = user.Id, Name = "Zhu" };
+            using (ISession session = OpenSession())
+            {
+                session.Update(detachedUser);
+                //Assert.Equal("", detachedUser.Name);
+
+                detachedUser.Name = "Guang";
+                session.Flush();
             }
         }
     }
