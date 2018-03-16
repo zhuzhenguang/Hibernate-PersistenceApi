@@ -74,16 +74,30 @@ namespace Hibernate_PersistenceApi.Facts
             }
         }
 
+        /*
+         * 1. update transient user
+         * 2. update persistent user
+         * 3. update detached user
+         */
         [Fact]
         public void should_update_user()
         {
             var user = new User {Name = "Zhu"};
+            using (ISession session = OpenSession())
+            {
+                session.Update(user);
+            }
 
             using (ISession session = OpenSession())
             {
                 session.Save(user);
+            }
 
+            using (ISession session = OpenSession())
+            {
+                user = session.Load<User>(user.Id);
                 user.Name = "Zhen";
+                //session.Update(user);
                 session.Flush();
                 Assert.Equal("Zhen", user.Name);
             }
@@ -91,10 +105,65 @@ namespace Hibernate_PersistenceApi.Facts
             var detachedUser = new User { Id = user.Id, Name = "Zhu" };
             using (ISession session = OpenSession())
             {
+                detachedUser.Name = "Guang";
+                session.Flush();
+            }
+
+            using (ISession session = OpenSession())
+            {
                 session.Update(detachedUser);
-                //Assert.Equal("", detachedUser.Name);
+                Assert.Equal("Zhu", detachedUser.Name);
 
                 detachedUser.Name = "Guang";
+                session.Flush();
+                Assert.Equal("Guang", detachedUser.Name);
+            }
+        }
+
+        /*
+         * 1. save or update transient user
+         * 2. save or update detached user
+         */
+        [Fact]
+        public void should_save_or_update_user()
+        {
+            var user = new User {Name = "Zhu"};
+            using (ISession session = OpenSession())
+            {
+                session.SaveOrUpdate(user);
+                Assert.NotEqual(0, user.Id);
+            }
+            
+            using (ISession session = OpenSession())
+            {
+                session.SaveOrUpdate(user);
+
+                user.Name = "Zhen";
+                session.Flush();
+                Assert.Equal("Zhen", user.Name);
+            }
+        }
+
+        [Fact]
+        public void should_lock_user()
+        {
+            var user = new User {Name = "Zhu"};
+            using (ISession session = OpenSession())
+            {
+                //session.Lock(user, LockMode.None);
+            }
+
+            using (ISession session = OpenSession())
+            {
+                session.Save(user);
+                session.Lock(user, LockMode.None);
+            }
+
+            using (ISession session = OpenSession())
+            {
+                session.Lock(user, LockMode.None);
+
+                user.Name = "Zhen";
                 session.Flush();
             }
         }
