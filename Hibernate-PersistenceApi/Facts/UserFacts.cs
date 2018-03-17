@@ -92,6 +92,7 @@ namespace Hibernate_PersistenceApi.Facts
 		public void should_update_user()
 		{
 			var user = new User {Name = "Zhu"};
+
 			using (ISession session = OpenSession())
 			{
 				session.Update(user);
@@ -106,9 +107,14 @@ namespace Hibernate_PersistenceApi.Facts
 			using (ISession session = OpenSession())
 			{
 				session.Save(user);
-
+			}
+			using (ISession session = OpenSession())
+			{
+				user = session.Load<User>(user.Id);
 				user.Name = "Zhen";
+
 				session.Flush();
+
 				VerifyUserName(user.Id, "Zhen");
 			}
 
@@ -119,6 +125,20 @@ namespace Hibernate_PersistenceApi.Facts
 
 				session.Flush();
 				VerifyUserName(detachedUser.Id, "Guang");
+			}
+
+			using (ISession session = OpenSession())
+			{
+				user = session.Load<User>(user.Id);
+				session.Delete(user);
+				session.Flush();
+
+				session.Update(user);
+
+				var exception = Assert.Throws<StaleStateException>(() => session.Flush());
+				Assert.Equal(
+					"Batch update returned unexpected row count from update; actual row count: 0; expected: 1", 
+					exception.Message);
 			}
 		}
 
@@ -131,6 +151,7 @@ namespace Hibernate_PersistenceApi.Facts
 		public void should_save_or_update_user()
 		{
 			var user = new User {Name = "Zhu"};
+
 			using (ISession session = OpenSession())
 			{
 				session.SaveOrUpdate(user);
@@ -161,6 +182,7 @@ namespace Hibernate_PersistenceApi.Facts
 		public void should_lock_user()
 		{
 			var user = new User {Name = "Zhu"};
+
 			using (ISession session = OpenSession())
 			{
 				var exception = Assert.Throws<TransientObjectException>(() => session.Lock(user, LockMode.None));
@@ -191,6 +213,7 @@ namespace Hibernate_PersistenceApi.Facts
 		public void should_merge_user()
 		{
 			var user = new User {Name = "Zhu"};
+
 			using (ISession session = OpenSession())
 			{
 				User persistentUser = session.Merge(user);
@@ -219,7 +242,7 @@ namespace Hibernate_PersistenceApi.Facts
 
 				var exception = Assert.Throws<NonUniqueObjectException>(() => session.Update(request));
 				Assert.Equal(
-					"a different object with the same identifier value was already associated with the session: 1, of entity: Hibernate_PersistenceApi.User", 
+					"a different object with the same identifier value was already associated with the session: 1, of entity: Hibernate_PersistenceApi.User",
 					exception.Message);
 			}
 
@@ -233,6 +256,76 @@ namespace Hibernate_PersistenceApi.Facts
 
 				VerifyUserName(user.Id, "Zhen");
 			}
+		}
+
+		[Fact]
+		public void should_delete_user()
+		{
+			var user = new User {Name = "Zhu"};
+
+			using (ISession session = OpenSession())
+			{
+				session.Save(user);
+				session.Delete(user);
+				session.Flush();
+
+				VerifyUsersCount(0);
+				Assert.NotEqual(0, user.Id);
+				Assert.False(session.Contains(user));
+			}
+
+			using (ISession session = OpenSession())
+			{
+				session.Save(user);
+			}
+			using (ISession session = OpenSession())
+			{
+				session.Delete(user);
+				session.Flush();
+
+				VerifyUsersCount(0);
+				Assert.NotEqual(0, user.Id);
+				Assert.False(session.Contains(user));
+			}
+
+			using (ISession session = OpenSession())
+			{
+				session.Delete(new User {Name = "Zhen"});
+				session.Flush();
+			}
+		}
+
+		[Fact]
+		public void should_be_flush()
+		{
+			var user = new User {Name = "Zhu"};
+			using (ISession session = OpenSession())
+			{
+				session.Save(user);
+			}
+
+			using (ISession session = OpenSession())
+			using (ITransaction transaction = session.BeginTransaction())
+			{
+				session.FlushMode = FlushMode.Auto;
+				session.Update(user);
+
+				user.Name = "Zhen";
+
+				transaction.Commit();
+			}
+			VerifyUserName(user.Id, "Zhen");
+
+			/*using (ISession session = OpenSession())
+			{
+				session.FlushMode = FlushMode.Auto;
+				session.Update(user);
+
+				user.Name = "Guang";
+
+				List<User> users = session.Query<User>().Where(u => u.Name == "Guang").ToList();
+				VerifyUserName(user.Id, "Guang");
+			}*/
 		}
 
 		void VerifyUserName(long id, string expectedName)
