@@ -38,15 +38,19 @@ namespace Hibernate_PersistenceApi.Facts
 				user = session.Load<User>(user.Id);
 				user.Name = "Zhen";
 				session.Save(user);
-				VerifyUserName(user.Id, "Zhu");
+			    {
+			        VerifyUserName(user.Id, "Zhu");
+			    }
 			}
 
 			using (ISession session = OpenSession())
 			{
 				user.Name = "Guang";
 				session.Save(user);
-				VerifyUserName(user.Id, "Zhu");
-				VerifyUsersCount(2);
+			    {
+			        VerifyUserName(user.Id, "Zhu");
+			        VerifyUsersCount(2);
+			    }
 			}
 		}
 
@@ -72,14 +76,18 @@ namespace Hibernate_PersistenceApi.Facts
 				user = session.Load<User>(user.Id);
 				user.Name = "Zhen";
 				session.Persist(user);
-				VerifyUserName(user.Id, "Zhu");
+			    {
+			        VerifyUserName(user.Id, "Zhu");
+			    }
 			}
 
 			using (ISession session = OpenSession())
 			{
 				user.Name = "Guang";
-				var exception = Assert.Throws<PersistentObjectException>(() => session.Persist(user));
-				Assert.Equal("detached entity passed to persist: Hibernate_PersistenceApi.User", exception.Message);
+			    {
+			        var exception = Assert.Throws<PersistentObjectException>(() => session.Persist(user));
+			        Assert.Equal("detached entity passed to persist: Hibernate_PersistenceApi.User", exception.Message);
+			    }
 			}
 		}
 
@@ -96,12 +104,13 @@ namespace Hibernate_PersistenceApi.Facts
 			using (ISession session = OpenSession())
 			{
 				session.Update(user);
-				VerifyUsersCount(0);
-
-				var exception = Assert.Throws<StaleStateException>(() => session.Flush());
-				Assert.Equal(
-					"Batch update returned unexpected row count from update; actual row count: 0; expected: 1",
-					exception.Message);
+			    {
+			        VerifyUsersCount(0);
+			        var exception = Assert.Throws<StaleStateException>(() => session.Flush());
+			        Assert.Equal(
+			            "Batch update returned unexpected row count from update; actual row count: 0; expected: 1",
+			            exception.Message);
+			    }
 			}
 
 			using (ISession session = OpenSession())
@@ -134,11 +143,12 @@ namespace Hibernate_PersistenceApi.Facts
 				session.Flush();
 
 				session.Update(user);
-
-				var exception = Assert.Throws<StaleStateException>(() => session.Flush());
-				Assert.Equal(
-					"Batch update returned unexpected row count from update; actual row count: 0; expected: 1", 
-					exception.Message);
+			    {
+			        var exception = Assert.Throws<StaleStateException>(() => session.Flush());
+			        Assert.Equal(
+			            "Batch update returned unexpected row count from update; actual row count: 0; expected: 1", 
+			            exception.Message);
+			    }
 			}
 		}
 
@@ -165,7 +175,9 @@ namespace Hibernate_PersistenceApi.Facts
 				user.Name = "Zhen";
 
 				session.SaveOrUpdate(user);
-				VerifyUserName(user.Id, "Zhu");
+			    {
+			        VerifyUserName(user.Id, "Zhu");
+			    }
 			}
 
 			using (ISession session = OpenSession())
@@ -174,7 +186,9 @@ namespace Hibernate_PersistenceApi.Facts
 
 				user.Name = "Guang";
 				session.Flush();
-				Assert.Equal("Guang", user.Name);
+			    {
+			        Assert.Equal("Guang", user.Name);
+			    }
 			}
 		}
 
@@ -200,7 +214,9 @@ namespace Hibernate_PersistenceApi.Facts
 
 				user.Name = "Zhen";
 				session.Flush();
-				VerifyUserName(user.Id, "Zhen");
+			    {
+			        VerifyUserName(user.Id, "Zhen");
+			    }
 			}
 		}
 
@@ -217,16 +233,20 @@ namespace Hibernate_PersistenceApi.Facts
 			using (ISession session = OpenSession())
 			{
 				User persistentUser = session.Merge(user);
-				Assert.Equal(0, user.Id);
-				Assert.NotEqual(0, persistentUser.Id);
-				VerifyUserName(persistentUser.Id, "Zhu");
+			    {
+			        Assert.Equal(0, user.Id);
+			        Assert.NotEqual(0, persistentUser.Id);
+			        VerifyUserName(persistentUser.Id, "Zhu");
+			    }
 			}
 
 			using (ISession session = OpenSession())
 			{
 				user = session.QueryOver<User>().SingleOrDefault();
 				User anotherPersistentUser = session.Merge(user);
-				Assert.Same(user, anotherPersistentUser);
+			    {
+			        Assert.Same(user, anotherPersistentUser);
+			    }
 			}
 
 			var request = new User
@@ -239,11 +259,12 @@ namespace Hibernate_PersistenceApi.Facts
 			{
 				user = session.Load<User>(user.Id);
 				Console.WriteLine($"original user name is {user.Name}");
-
-				var exception = Assert.Throws<NonUniqueObjectException>(() => session.Update(request));
-				Assert.Equal(
-					"a different object with the same identifier value was already associated with the session: 1, of entity: Hibernate_PersistenceApi.User",
-					exception.Message);
+			    {
+                    var exception = Assert.Throws<NonUniqueObjectException>(() => session.Update(request));
+			        Assert.Equal(
+			            "a different object with the same identifier value was already associated with the session: 1, of entity: Hibernate_PersistenceApi.User",
+			            exception.Message);
+			    }
 			}
 
 			using (ISession session = OpenSession())
@@ -253,8 +274,9 @@ namespace Hibernate_PersistenceApi.Facts
 
 				session.Merge(request);
 				session.Flush();
-
-				VerifyUserName(user.Id, "Zhen");
+			    {
+			        VerifyUserName(user.Id, "Zhen");
+			    }
 			}
 		}
 
@@ -282,10 +304,11 @@ namespace Hibernate_PersistenceApi.Facts
 			{
 				session.Delete(user);
 				session.Flush();
-
-				VerifyUsersCount(0);
-				Assert.NotEqual(0, user.Id);
-				Assert.False(session.Contains(user));
+			    {
+			        VerifyUsersCount(0);
+			        Assert.NotEqual(0, user.Id);
+			        Assert.False(session.Contains(user));
+			    }
 			}
 
 			using (ISession session = OpenSession())
